@@ -1,0 +1,8 @@
+{
+    "kafka": {
+        "bootstrap_servers": "localhost:9094",
+        "user_entrance_topic": "user_entrance",
+        "user_purchases_topic": "user_purchases"
+    }
+
+}
