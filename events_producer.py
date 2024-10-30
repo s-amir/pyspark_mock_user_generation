@@ -103,17 +103,18 @@ import json
 import logging
 import random
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
+
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, lit, udf
-from pyspark.sql.types import StructType, StructField, StringType, Row
 from pyspark.sql import functions as F
+from pyspark.sql.functions import col
+from pyspark.sql.types import StructType, StructField, StringType, Row
 
 # Initialize Spark Session
 spark = SparkSession.builder \
     .appName("Kafka Event Producer") \
     .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.3") \
-    .master("local[2]")\
+    .master("local[10]") \
     .getOrCreate()
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -136,7 +137,7 @@ def generate_entrance_event(user_id):
     return json.dumps({
         "Event_id": "entrance",
         "User_id": user_id,
-        "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        "Timestamp": (datetime.now() - timedelta(seconds=random.randint(-10, 10))).strftime("%Y-%m-%d %H:%M:%S")
     })
 
 
@@ -144,7 +145,7 @@ def generate_purchase_event(user_id):
     return json.dumps({
         "Event_id": "purchase",
         "User_id": user_id,
-        "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        "Timestamp": (datetime.now() - timedelta(seconds=random.randint(-10, 10))).strftime("%Y-%m-%d %H:%M:%S")
     })
 
 
@@ -204,9 +205,11 @@ def start_kafka_stream(num_users, purchase_ratio):
         .option("kafka.bootstrap.servers", kafka_bootstrap_servers) \
         .option("topic", user_purchases_topic) \
         .save()
-    time.sleep(1000)
 
 
 # Start streaming to Kafka
-start_kafka_stream(num_users=1000000, purchase_ratio=0.3)
-
+while True:
+    purchase_ratio = random.random()
+    print("purchase_ratio="+str(purchase_ratio))
+    start_kafka_stream(num_users=10, purchase_ratio=purchase_ratio)
+    time.sleep(10)
